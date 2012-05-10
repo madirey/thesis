@@ -1,5 +1,7 @@
 \documentclass{article}
 
+\usepackage{listings}
+
 \title{Supplemental Content-Based Image Retrieval for Keyword Search with Relevance Feedback}
 \author{Matthew T. Caldwell}
 \date{June 2012}
@@ -22,11 +24,132 @@ and describe ways by which it may be improved.
 \end{abstract}
 
 \section{Introduction}
+Given the popularity of online photo sharing communities, such as Flickr, it is becoming increasingly more important to
+provide new ways of discovering relevant photos on the web.  Many of the photos provided by Flickr, for example, are
+available royalty-free via a Creative Commons license.  These photos are incredibly valuable to media organizations,
+journalists, bloggers, and various other groups and invidivuals, because they represent a resource that can be used to
+supplement editorial works.  All of the photos (even the ones that are not Creative Commons) may represent value to
+the scientific community \cite{academic}.
+
+Traditionally, images have been indexed, discovered, and retrieved in much the same way that text documents (such as
+books, journals, and web pages) have been.  A set of textual keywords or {\em tags} is often provided, along with an
+optional text-based caption and text-based long description.  To search a given database for an images, a keyword
+search is performed on those text elements.  This works reasonably well if the images are represented by an
+accurate and comprehensive set of text annotations; however, in the case of user-driven online photo sharing communities,
+annotations are often lacking and incomplete \cite{whywetag}.  Thus, it makes sense to investigate other methods of
+online photo discovery that may be more effective and useful to the end-user.
+
+\subsection{Content-Based Image Retrieval}
+Our method has roots in Content-Based Image Retrieval (CBIR), which has been an active research topic in the Computer Vision
+community since at least 1973 \cite{mars}.  In CBIR, characteristics of the image are used to search and discover, rather
+than text-based annotations.  A typical CBIR system will use image processing techniques to extract {\em feature vectors}
+from an image, employ some method of comparing the feature vectors belonging to two or more images, and then use those
+characteristics to help a user find images that they deem relevant.  More formally, given a set of images I
+
+FILL THIS IN!!!
+
+SHOW DIAGRAM
+
+A feature vector can take on many different forms, but some of the most common representations are color histogram (RGB, HSV),
+multiscale fractal curve, and a set of Fourier coefficients \cite{survey}.
+
+\subsection{Relevance Feedback}
+{\em Relevance feedback} (RF) is a key component of our method.  In RF, the user is given an opportunity to perform a more
+interactive search, providing feedback as to which images may be most and least relevant.  After each round of user input,
+the CBIR system will reformulate the query, taking into account the user's preferences.  More formally,
+
+FILL THIS IN!!!
+
+RF has been shown to improve the
+effectiveness of traditional CBIR systems \cite{survey}, but comes with its own set of disadvantages.  For example, the
+interactive nature of this type of search may require that we use less sophisiticated feature vector comparison algorithms
+in order to provide a useful set of results in real time.
+
+
+\section{Method}
+
+\subsection{Architecture}
+Our system consists of a simple web service REST API and a web client which can be accessed using a modern web browser.
+The web service essentially acts as a proxy to other external web services, notably Flickr's public REST API.  The web
+server is written in Python and based on Django, a popular web framework.  The client is implemented primarily using
+Javascript via the ExtJS framework and HTML5.
+
+The web service accepts URLs in the form of: http://\<server\>/<data-source>/search/<query-string>?{relevant=<image-id>}*\&{irrelevant=<image-id>}
+
+For example, the client may generate a URL like the following, if the user has searched for the term ``eagle'' and has selected
+a relevant photo and two irrelevant photos:
+
+http://react.com/flickr/search/eagle?relevant=627\&irrelevant=283755\&irrelevant=92787578
+
+When the server receives this request, it's routed to the appropriate module, where it will undergo processing according
+to the algorithm below:
+
+\lstset{
+    language=Python,
+    basicstyle=\small\sffamily,
+    numbers=left,
+    numberstyle=\tiny,
+    frame=tb,
+    columns=fullflexible,
+    showstringspaces=false
+}
+
+\begin{lstlisting}[caption=my source code]
+def search(data_source, query, relevant_ids, irrelevant_ids):
+    images = query(data_source, query) # performs a keyword search
+    for image in images:
+        if image.id not in cache:
+            f = extract_features(image)
+            cache[image.id] = f
+    for id in relevant_ids + irrelevant_ids:
+        if id not in cache:
+            image = get_image(id)
+            f = extract_features(image)
+            cache[image.id] = f
+    return rank(images)
+\end{lstlisting}
+
+\begin{lstlisting}[caption=my source code 2]
+def extract_features(image):
+    pass
+\end{lstlisting}
+
+\begin{lstlisting}[caption=my source code 3]
+def rank(images):
+    pass
+\end{lstlisting}
+
+
+
+
+\section{Results}
+
+
+\section{Future Work}
+Our system was designed using a pluggable architecture, allowing for extension to support other platforms, in
+addition to Flickr.  There are several other online photo sharing communities that could be supported, including the
+popular websites, Picasa and PhotoBucket.  Furthermore, these plugins don't necessarily have to be for photo-sharing
+sites (although some changes may be required on the front-end)--they could provide search filtering functionality for
+text documents or any other type of media.
+
+Additionally, user experience testing with our system would be prudent.  We have measured the effectiveness of the
+search algorithm, but we have not measured our users' attitude toward the software--did the system help the user
+find what he or she was looking for?  Has this helped a user find what he or she needed to accomplish a work-related
+task?  Many questions of this nature could be studied and approached from a human-computer interaction (HCI) standpoint.
+
+
+\section{Acknowledgements}
 
 
 \begin{thebibliography}{99}
   \bibitem{whywetag} Ames, M., Naaman, M.  Why We Tag: Motivations for Annotation in Mobile and Online Media.  In
-    {\em CHI 2007, April 28-May 3, 2007}.
+    {\em CHI 2007}, April 28-May 3, 2007.
+  \bibitem{survey} Torres, R., Falc\~ao, A.  Content-Based Image Retrieval: Theory and Applications.  In
+    {\em RITA}, Volume XIII, N\'umero 2, 2006.
+  \bibitem{academic} Angus, E., Stuart, D., Thelwall, M.  Flickr's potential as an academic image resource: An
+    exploratory study.  In {\em Journal of Librarianship and Information Science}, 42(4), pp. 268-278, 2010.
+  \bibitem{mars} Rui, Y., Huang, T., Mehrotra, S.  Content-Based Image Retrieval with Relevance Feedback in MARS.  
+    In {\em Proceedings, International Conference on Image Processing}, Vol. 2, pp. 815-818, 1997.
 \end{thebibliography}
 
 \end{document}
